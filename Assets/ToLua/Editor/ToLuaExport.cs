@@ -166,7 +166,8 @@ public static class ToLuaExport
         "KeyValuePair.Deconstruct",
         "ParticleSystem.SetJob",
         "ParticleSystem.subEmitters", /*2019.09 ios编译出错，也可能是unity版本问题*/
-        "Type.IsSZArray"
+        "Type.IsSZArray",
+        "UnityEngine.Application.MemoryUsageChangedCallback"
     };
 
     class _MethodBase
@@ -3721,6 +3722,22 @@ public static class ToLuaExport
 
     public static bool IsObsolete(MemberInfo mb)
     {
+
+        if (mb is MethodBase method)
+        {
+            ParameterInfo[] parameters = method.GetParameters();
+            foreach (ParameterInfo parameter in parameters)
+            {
+                Type parameterType = parameter.ParameterType;
+                if (parameterType.IsGenericType)
+                {
+                    Type genericTypeDefinition = parameterType.GetGenericTypeDefinition();
+                    if (genericTypeDefinition == typeof(System.Span<>) ||
+                        genericTypeDefinition == typeof(System.ReadOnlySpan<>))
+                        return true;
+                }
+            }
+        }
         object[] attrs = mb.GetCustomAttributes(true);
 
         for (int j = 0; j < attrs.Length; j++)
